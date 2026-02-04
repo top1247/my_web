@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .status-badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .status-active { background: #f0f9ff; color: #0369a1; }
+        .status-disabled { background: #fef2f2; color: #b91c1c; }
+        .type-badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .type-admin { background: #fef3c7; color: #92400e; }
+        .type-normal { background: #f3f4f6; color: #4b5563; }
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 10% auto; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; }
+        .modal-header { font-size: 20px; font-weight: 600; margin-bottom: 20px; }
+        .modal-footer { margin-top: 24px; text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="top-navbar">
+        <div class="logo">
+            <div class="logo-icon">☁</div>
+            <span>阿里云成本管理系统</span>
+        </div>
+        <div class="user-info">
+            <span class="username" th:text="${username}"></span><span th:if="${user_type == 'admin'}" style="color:#67c23a">[管理员]</span>
+            <a th:href="@{/logout}" class="logout-link">退出登录</a>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <ul class="sidebar-menu">
+            <li><a th:href="@{/}"><i>🏠</i> 首页</a></li>
+            <li><a th:href="@{/aliyun/keys}"><i>🔑</i> 密钥管理</a></li>
+            <li><a th:href="@{/aliyun/bills}"><i>📊</i> 账单管理</a></li>
+            <li style="margin-top: 20px; padding: 8px 24px; color: #999; font-size: 12px;">管理员功能</li>
+            <li><a th:href="@{/admin/users}" class="active"><i>👥</i> 用户管理</a></li>
+            <li><a th:href="@{/admin/logs}"><i>📝</i> 操作日志</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">用户管理</h1>
+            <p class="page-subtitle">管理系统用户账号和权限</p>
+        </div>
+
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <div class="content-card">
+            <h2 class="card-title">用户列表（共 <span th:text="${#lists.size(users)}"></span> 人）</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 8%">ID</th>
+                        <th style="width: 15%">用户名</th>
+                        <th style="width: 12%">用户类型</th>
+                        <th style="width: 10%">状态</th>
+                        <th style="width: 18%">注册时间</th>
+                        <th style="width: 18%">最近登录</th>
+                        <th style="width: 19%; text-align: center;">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="user : ${users}">
+                        <td th:text="${user.id}"></td>
+                        <td><strong th:text="${user.username}"></strong></td>
+                        <td>
+                            <span class="type-badge" th:classappend="${user.userType == 'admin'} ? 'type-admin' : 'type-normal'">
+                                <span th:if="${user.userType == 'admin'}">管理员</span>
+                                <span th:if="${user.userType != 'admin'}">普通用户</span>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge" th:classappend="${user.status == 'active'} ? 'status-active' : 'status-disabled'">
+                                <span th:if="${user.status == 'active'}">正常</span>
+                                <span th:if="${user.status != 'active'}">禁用</span>
+                            </span>
+                        </td>
+                        <td style="font-size: 12px; color: #999;" th:text="${user.createdAt != null ? user.createdAt.toString().replace('T', ' ').substring(0, 19) : '-'}"></td>
+                        <td style="font-size: 12px; color: #999;" th:text="${user.lastLogin != null ? user.lastLogin.toString().replace('T', ' ').substring(0, 19) : '从未登录'}"></td>
+                        <td style="text-align: center;">
+                            <button class="btn-success" th:onclick="'openResetPasswordModal(' + ${user.id} + ', \'' + ${user.username} + '\')'">重置密码</button>
+                            <span th:if="${user.id != currentUserId}">
+                                <form th:action="@{'/admin/users/toggle_status/' + ${user.id}}" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn-danger" th:if="${user.status == 'active'}" onclick="return confirm('确定要禁用用户【' + ${user.username} + '】吗？')">禁用</button>
+                                    <button type="submit" class="btn-success" th:if="${user.status != 'active'}" onclick="return confirm('确定要启用用户【' + ${user.username} + '】吗？')">启用</button>
+                                </form>
+                            </span>
+                            <span th:if="${user.id == currentUserId}" style="color: #999; font-size: 13px;">(当前用户)</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">重置用户密码</div>
+            <form id="resetPasswordForm" method="POST">
+                <input type="hidden" id="resetUserId" name="userId">
+                <p style="margin-bottom: 20px; color: #666;">正在重置用户：<strong id="resetUsername"></strong></p>
+                <div class="form-group">
+                    <label for="newPassword">新密码 *</label>
+                    <input type="password" id="newPassword" name="newPassword" required minlength="6" placeholder="请输入新密码（至少6位）">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">确认密码 *</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6" placeholder="请再次输入新密码">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-danger" onclick="closeResetPasswordModal()">取消</button>
+                    <button type="submit" class="btn">确认重置</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openResetPasswordModal(userId, username) {
+            document.getElementById('resetUserId').value = userId;
+            document.getElementById('resetUsername').textContent = username;
+            document.getElementById('resetPasswordForm').action = '/admin/users/reset_password/' + userId;
+            document.getElementById('resetPasswordModal').style.display = 'block';
+        }
+
+        function closeResetPasswordModal() {
+            document.getElementById('resetPasswordModal').style.display = 'none';
+            document.getElementById('resetPasswordForm').reset();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('resetPasswordModal');
+            if (event.target == modal) {
+                closeResetPasswordModal();
+            }
+        }
+    </script>
+</body>
+</html>

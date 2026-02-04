@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿里云成本管理系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="top-navbar">
+        <div class="logo">
+            <div class="logo-icon">☁</div>
+            <span>阿里云成本管理系统</span>
+        </div>
+        <div class="user-info">
+            <span class="username" th:text="${username}"></span>
+            <span th:if="${user_type == 'admin'}" style="color:#67c23a">[管理员]</span>
+            <a th:href="@{/logout}" class="logout-link">退出登录</a>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <ul class="sidebar-menu">
+            <li><a th:href="@{/}" class="active"><i>🏠</i> 首页</a></li>
+            <li><a th:href="@{/aliyun/keys}"><i>🔑</i> 密钥管理</a></li>
+            <li><a th:href="@{/aliyun/bills}"><i>📊</i> 账单管理</a></li>
+            <li th:if="${user_type == 'admin'}" style="margin-top: 20px; padding: 8px 24px; color: #999; font-size: 12px;">管理员功能</li>
+            <li th:if="${user_type == 'admin'}"><a th:href="@{/admin/users}"><i>👥</i> 用户管理</a></li>
+            <li th:if="${user_type == 'admin'}"><a th:href="@{/admin/logs}"><i>📝</i> 操作日志</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">欢迎回来，<span th:text="${username}"></span>！</h1>
+            <p class="page-subtitle">阿里云成本管理系统 - 让云成本管理更简单</p>
+        </div>
+
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <div class="feature-grid">
+            <div class="feature-item" onclick="location.href='/aliyun/keys'">
+                <div class="feature-icon">🔑</div>
+                <h3 class="feature-title">密钥管理</h3>
+                <p class="feature-desc">安全地存储和管理您的阿里云 Access Key<br>支持多账号管理，AES-256加密存储</p>
+            </div>
+
+            <div class="feature-item" onclick="location.href='/aliyun/bills'">
+                <div class="feature-icon">📊</div>
+                <h3 class="feature-title">账单查询</h3>
+                <p class="feature-desc">查询和分析您的阿里云账单数据<br>支持按月、按日灵活查询</p>
+            </div>
+
+            <div class="feature-item" onclick="location.href='/aliyun/bills'">
+                <div class="feature-icon">📥</div>
+                <h3 class="feature-title">数据导出</h3>
+                <p class="feature-desc">将账单数据导出为 Excel 格式<br>方便进行进一步的数据分析</p>
+            </div>
+
+            <div th:if="${user_type == 'admin'}" class="feature-item" onclick="location.href='/admin/users'">
+                <div class="feature-icon">👥</div>
+                <h3 class="feature-title">用户管理</h3>
+                <p class="feature-desc">管理系统用户账号<br>重置密码、启用/禁用用户</p>
+            </div>
+
+            <div th:if="${user_type == 'admin'}" class="feature-item" onclick="location.href='/admin/logs'">
+                <div class="feature-icon">📝</div>
+                <h3 class="feature-title">操作日志</h3>
+                <p class="feature-desc">查看系统操作记录<br>审计和追踪用户行为</p>
+            </div>
+        </div>
+
+        <div class="content-card" style="margin-top: 30px;">
+            <h2 class="card-title">系统功能说明</h2>
+            <div style="line-height: 2; color: #666;">
+                <p><strong>✓ 密钥安全管理：</strong>使用 AES-256 加密算法存储您的阿里云密钥，确保数据安全</p>
+                <p><strong>✓ 智能账单获取：</strong>支持按月度汇总和每日明细两种方式获取账单数据</p>
+                <p><strong>✓ 数据可视化展示：</strong>清晰的表格展示账单数据，支持筛选和排序</p>
+                <p><strong>✓ 便捷数据导出：</strong>一键导出 Excel 格式账单，方便财务对账和分析</p>
+                <p><strong>✓ 多账号支持：</strong>可以管理多个阿里云账号的密钥和账单</p>
+                <p th:if="${user_type == 'admin'}"><strong>✓ 用户权限管理：</strong>管理员可以管理用户账号，重置密码，启用/禁用账号</p>
+                <p th:if="${user_type == 'admin'}"><strong>✓ 操作日志审计：</strong>完整记录所有用户操作，便于审计和追溯</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

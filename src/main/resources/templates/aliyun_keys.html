@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>密钥管理</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="top-navbar">
+        <div class="logo">
+            <div class="logo-icon">☁</div>
+            <span>阿里云成本管理系统</span>
+        </div>
+        <div class="user-info">
+            <span class="username" th:text="${username}"></span>
+            <span th:if="${user_type == 'admin'}" style="color:#67c23a">[管理员]</span>
+            <a th:href="@{/logout}" class="logout-link">退出登录</a>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <ul class="sidebar-menu">
+            <li><a th:href="@{/}"><i>🏠</i> 首页</a></li>
+            <li><a th:href="@{/aliyun/keys}" class="active"><i>🔑</i> 密钥管理</a></li>
+            <li><a th:href="@{/aliyun/bills}"><i>📊</i> 账单管理</a></li>
+            <li th:if="${user_type == 'admin'}" style="margin-top: 20px; padding: 8px 24px; color: #999; font-size: 12px;">管理员功能</li>
+            <li th:if="${user_type == 'admin'}"><a th:href="@{/admin/users}"><i>👥</i> 用户管理</a></li>
+            <li th:if="${user_type == 'admin'}"><a th:href="@{/admin/logs}"><i>📝</i> 操作日志</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">密钥管理</h1>
+            <p class="page-subtitle">安全管理您的阿里云 Access Key</p>
+        </div>
+
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <div class="content-card">
+            <h2 class="card-title">添加新密钥</h2>
+            <form th:action="@{/aliyun/keys/add}" method="POST">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div class="form-group">
+                        <label for="alias">账号别名 *</label>
+                        <input type="text" id="alias" name="alias" required placeholder="例如：生产环境">
+                    </div>
+                    <div class="form-group">
+                        <label for="accessKeyId">Access Key ID *</label>
+                        <input type="text" id="accessKeyId" name="accessKeyId" required placeholder="输入您的 Access Key ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="accessKeySecret">Access Key Secret *</label>
+                        <input type="password" id="accessKeySecret" name="accessKeySecret" required placeholder="输入您的 Access Key Secret">
+                    </div>
+                </div>
+                <button type="submit" class="btn">添加密钥</button>
+            </form>
+        </div>
+
+        <div class="content-card">
+            <h2 class="card-title">已保存的密钥列表</h2>
+            <div th:if="${not #lists.isEmpty(keys)}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 20%">账号别名</th>
+                            <th style="width: 30%">Access Key ID</th>
+                            <th style="width: 25%">创建时间</th>
+                            <th style="width: 25%; text-align: center;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="key : ${keys}">
+                            <td><strong th:text="${key.alias}"></strong></td>
+                            <td><code style="background: #f5f5f5; padding: 4px 8px; border-radius: 4px;" th:text="${key.maskedAccessKeyId}"></code></td>
+                            <td th:text="${key.createdAt != null ? key.createdAt.toString().replace('T', ' ').substring(0, 19) : '-'}"></td>
+                            <td style="text-align: center;">
+                                <form th:action="@{'/aliyun/keys/delete/' + ${key.id}}" method="POST" style="display: inline;" onsubmit="return confirm('确定要删除密钥【' + ${key.alias} + '】吗？此操作不可恢复！');">
+                                    <button type="submit" class="btn-danger">删除</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div th:if="${#lists.isEmpty(keys)}" style="text-align: center; padding: 60px 0; color: #999;">
+                <div style="font-size: 64px; margin-bottom: 16px;">🔑</div>
+                <p style="font-size: 16px;">暂无密钥，请添加您的第一个阿里云密钥</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
